@@ -44,7 +44,7 @@ Core behavior:
 ## 2. DESIGN SYSTEM
 
 ### Design Identity
-Style    : Dynamic sky gradients + frosted glass cards
+Style    : Dynamic sky gradients + CSS-only atmospheric effects + frosted glass cards
 Aesthetic: Weather-native, immersive, premium
 Approach : Each background state IS a weather condition
            The design responds to real data — not decoration
@@ -54,16 +54,34 @@ Eight CSS classes applied to the <body> element.
 Swapped by JavaScript based on weather condition code
 and time of day from the API response.
 Body must always have exactly ONE background class.
+Background gradients are multi-stop, top-to-bottom skies.
+Use 180deg gradients only.
 
 ```css
-.weather-clear-day   { background: linear-gradient(135deg, #f7b733, #fc4a1a); }
-.weather-clear-night { background: linear-gradient(135deg, #0f0c29, #302b63); }
-.weather-cloudy      { background: linear-gradient(135deg, #757F9A, #D7DDE8); }
-.weather-rainy       { background: linear-gradient(135deg, #1a1a2e, #16213e); }
-.weather-stormy      { background: linear-gradient(135deg, #0f2027, #203a43); }
-.weather-snowy       { background: linear-gradient(135deg, #e0eafc, #cfdef3); }
-.weather-foggy       { background: linear-gradient(135deg, #606c88, #3f4c6b); }
-.weather-default     { background: linear-gradient(135deg, #2980B9, #6DD5FA); }
+.weather-clear-day {
+  background: linear-gradient(180deg, #0a2463 0%, #1565c0 25%, #1e88e5 55%, #64b5f6 80%, #e3f2fd 100%);
+}
+.weather-clear-night {
+  background: linear-gradient(180deg, #000000 0%, #0a0a2e 30%, #0d1b4b 60%, #1a237e 100%);
+}
+.weather-cloudy {
+  background: linear-gradient(180deg, #546e7a 0%, #78909c 30%, #90a4ae 60%, #b0bec5 85%, #cfd8dc 100%);
+}
+.weather-rainy {
+  background: linear-gradient(180deg, #0d1117 0%, #0f1f35 30%, #1a2f4a 60%, #1e3a5f 100%);
+}
+.weather-stormy {
+  background: linear-gradient(180deg, #000000 0%, #0a0f0f 25%, #0d1f1f 55%, #102020 80%, #0f2027 100%);
+}
+.weather-snowy {
+  background: linear-gradient(180deg, #90a4ae 0%, #b0bec5 25%, #cfd8dc 55%, #e3eaf0 80%, #f5f8fa 100%);
+}
+.weather-foggy {
+  background: linear-gradient(180deg, #37474f 0%, #546e7a 30%, #607d8b 60%, #78909c 85%, #90a4ae 100%);
+}
+.weather-default {
+  background: linear-gradient(180deg, #0d47a1 0%, #1565c0 30%, #1976d2 60%, #42a5f5 85%, #90caf9 100%);
+}
 ```
 
 Background transition — on the body element:
@@ -71,11 +89,39 @@ Background transition — on the body element:
 body {
   transition: background 1.2s ease;
   min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
 }
 ```
 
 Default class on page load: weather-default
 This must be set in index.html before JS loads.
+
+### Atmospheric Effects
+Atmospheric effects are CSS-only pseudo-elements on the body element.
+They must never require JavaScript, images, external assets, libraries,
+or keyframe animations.
+
+Required effects:
+- Clear day uses `.weather-clear-day::before` for sun glow
+- Clear night uses `.weather-clear-night::before` for moon glow
+- Clear night uses `.weather-clear-night::after` for stars
+- Rainy uses `.weather-rainy::after` for rain streaks
+- Foggy uses `.weather-foggy::after` for ground fog
+- Snowy uses `.weather-snowy::before` for snow shimmer
+
+Pseudo-element rules:
+- `position: fixed`
+- `pointer-events: none`
+- `z-index: 0`
+- Content containers sit above effects with `position: relative` and `z-index: 1`
+- Effects are static; no animations or keyframes
+
+Snowy contrast rules:
+- White text on snowy near-white backgrounds is not allowed
+- Snowy state may override key weather/forecast text to dark
+- Snowy state may override `.glass-card` background and border only as a state-specific contrast fix
+- Do not change the base `.glass-card` style
 
 ### Condition Code → Background Class Mapping
 OpenWeatherMap returns a numeric condition code.
@@ -251,6 +297,7 @@ weather-dashboard/
 ├── skills/
 │   ├── setup/SKILL.md
 │   ├── api/SKILL.md
+│   ├── atmosphere/SKILL.md
 │   ├── autocomplete/SKILL.md
 │   ├── background/SKILL.md
 │   ├── ui/SKILL.md
@@ -533,6 +580,7 @@ id="unit-celsius", id="unit-fahrenheit"
 - Use CSS custom properties for repeated values
 - Mobile-first — base styles for mobile, media queries for larger
 - Animations use transform and opacity only — never width/height
+- Atmospheric background effects are static CSS-only pseudo-elements
 - All transitions 0.2s ease (except body background: 1.2s ease)
 - Always include -webkit-backdrop-filter with backdrop-filter
 
@@ -595,7 +643,7 @@ No magic numbers — use named constants from config.js.
 - Full keyboard navigation — Enter fires search from input
 - Focus states visible — never outline: none without replacement
 - Background transitions do not affect text readability
-- Snowy background: verify white text contrast meets WCAG AA
+- Snowy background: apply and verify dark text contrast meets WCAG AA
 
 ---
 
@@ -641,6 +689,7 @@ docs: short description     ← README or comments updated
 ```
 skills/setup/SKILL.md       → Day 1: folder, HTML, CSS reset, fonts
 skills/api/SKILL.md         → API layer: config.js + api.js
+skills/atmosphere/SKILL.md  → Immersive CSS-only sky atmosphere effects
 skills/autocomplete/SKILL.md → City search suggestions via Geocoding API
 skills/background/SKILL.md  → Sky gradient system + condition mapping
 skills/ui/SKILL.md          → Render functions in ui.js
@@ -705,6 +754,20 @@ Test your own condition code mapping logic.
 Comment every section.
 After building, perform a self-review using skills/review/SKILL.md.
 Report what was built and flag any issues.
+```
+
+### PROMPT: build-atmosphere
+```
+Read AGENTS.md and skills/atmosphere/SKILL.md completely.
+Update style.css only.
+Replace all 8 background gradient classes with the upgraded 180deg versions.
+Add CSS-only atmospheric pseudo-element effects exactly as specified.
+Add the snowy contrast override.
+Add the z-index stacking rule for content above atmospheric effects.
+Do not touch HTML or JavaScript files.
+Do not change unrelated CSS rules, typography, spacing, or base glass-card styles.
+After building, perform a self-review using skills/review/SKILL.md.
+Report every change made and flag any issues.
 ```
 
 ### PROMPT: build-ui
@@ -784,6 +847,7 @@ Report what was built and the exact Vercel environment variable to set.
 - Read AGENTS.md before writing any code — every session
 - Never modify a module outside its assigned skill scope
 - Never add CSS frameworks, JS libraries, or external dependencies
+- Never add images, libraries, JavaScript, or animations for atmospheric sky effects
 - Never use innerHTML for user-supplied or API-sourced data
 - Never store converted temperatures — Kelvin is the source of truth
 - Never make sequential API calls — always Promise.all

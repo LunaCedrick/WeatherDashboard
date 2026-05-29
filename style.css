@@ -51,6 +51,7 @@ button {
 /* Base page */
 body {
   min-height: 100vh;
+  position: relative;
   overflow-x: hidden;
   color: var(--color-text-primary);
   font-family: var(--font-body);
@@ -63,35 +64,199 @@ img {
 
 /* Background states */
 .weather-clear-day {
-  background: linear-gradient(135deg, #f7b733, #fc4a1a);
+  background: linear-gradient(
+    180deg,
+    #0a2463 0%,
+    #1565c0 25%,
+    #1e88e5 55%,
+    #64b5f6 80%,
+    #e3f2fd 100%
+  );
 }
 
 .weather-clear-night {
-  background: linear-gradient(135deg, #0f0c29, #302b63);
+  background: linear-gradient(
+    180deg,
+    #000000 0%,
+    #0a0a2e 30%,
+    #0d1b4b 60%,
+    #1a237e 100%
+  );
 }
 
 .weather-cloudy {
-  background: linear-gradient(135deg, #757F9A, #D7DDE8);
+  background: linear-gradient(
+    180deg,
+    #546e7a 0%,
+    #78909c 30%,
+    #90a4ae 60%,
+    #b0bec5 85%,
+    #cfd8dc 100%
+  );
 }
 
 .weather-rainy {
-  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  background: linear-gradient(
+    180deg,
+    #0d1117 0%,
+    #0f1f35 30%,
+    #1a2f4a 60%,
+    #1e3a5f 100%
+  );
 }
 
 .weather-stormy {
-  background: linear-gradient(135deg, #0f2027, #203a43);
+  background: linear-gradient(
+    180deg,
+    #000000 0%,
+    #0a0f0f 25%,
+    #0d1f1f 55%,
+    #102020 80%,
+    #0f2027 100%
+  );
 }
 
 .weather-snowy {
-  background: linear-gradient(135deg, #e0eafc, #cfdef3);
+  background: linear-gradient(
+    180deg,
+    #90a4ae 0%,
+    #b0bec5 25%,
+    #cfd8dc 55%,
+    #e3eaf0 80%,
+    #f5f8fa 100%
+  );
 }
 
 .weather-foggy {
-  background: linear-gradient(135deg, #606c88, #3f4c6b);
+  background: linear-gradient(
+    180deg,
+    #37474f 0%,
+    #546e7a 30%,
+    #607d8b 60%,
+    #78909c 85%,
+    #90a4ae 100%
+  );
 }
 
 .weather-default {
-  background: linear-gradient(135deg, #2980B9, #6DD5FA);
+  background: linear-gradient(
+    180deg,
+    #0d47a1 0%,
+    #1565c0 30%,
+    #1976d2 60%,
+    #42a5f5 85%,
+    #90caf9 100%
+  );
+}
+
+/* Sun glow effect for clear day background */
+.weather-clear-day::before {
+  content: "";
+  position: fixed;
+  top: -80px;
+  right: 10%;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 236, 100, 0.5) 0%,
+    rgba(255, 200, 50, 0.25) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Moon glow effect for clear night background */
+.weather-clear-night::before {
+  content: "";
+  position: fixed;
+  top: 40px;
+  right: 12%;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(200, 220, 255, 0.45) 0%,
+    rgba(180, 200, 255, 0.2) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Star field effect for clear night background */
+.weather-clear-night::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(255, 255, 255, 0.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 8%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 40% 20%, rgba(255, 255, 255, 0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 5%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 12%, rgba(255, 255, 255, 0.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 7%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 35%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 25%, rgba(255, 255, 255, 0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 30%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 40%, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Rain streak texture for rainy background */
+.weather-rainy::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    100deg,
+    transparent,
+    transparent 2px,
+    rgba(174, 214, 241, 0.04) 2px,
+    rgba(174, 214, 241, 0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ground fog layer for foggy background */
+.weather-foggy::after {
+  content: "";
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 40%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(176, 190, 197, 0.3) 60%,
+    rgba(176, 190, 197, 0.5) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Snow shimmer effect for snowy background */
+.weather-snowy::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 15% 20%, rgba(255, 255, 255, 0.9) 0%, transparent 100%),
+    radial-gradient(2px 2px at 30% 50%, rgba(255, 255, 255, 0.7) 0%, transparent 100%),
+    radial-gradient(2px 2px at 50% 30%, rgba(255, 255, 255, 0.8) 0%, transparent 100%),
+    radial-gradient(2px 2px at 70% 60%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+    radial-gradient(2px 2px at 85% 25%, rgba(255, 255, 255, 0.9) 0%, transparent 100%),
+    radial-gradient(2px 2px at 45% 70%, rgba(255, 255, 255, 0.7) 0%, transparent 100%),
+    radial-gradient(2px 2px at 60% 15%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+    radial-gradient(2px 2px at 20% 75%, rgba(255, 255, 255, 0.8) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Shared glass card */
@@ -102,6 +267,33 @@ img {
   border: 1px solid rgba(255, 255, 255, 0.25);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   border-radius: 20px;
+}
+
+/* Content stacking above atmospheric effects */
+.glass-card,
+.forecast-section,
+.forecast-container,
+.app-header,
+.app-footer,
+.app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+/* Snowy contrast override */
+.weather-snowy .weather-card__temperature,
+.weather-snowy .weather-card__location,
+.weather-snowy .weather-card__description,
+.weather-snowy .weather-card__meta-label,
+.weather-snowy .weather-card__meta-value,
+.weather-snowy .forecast-card__day,
+.weather-snowy .forecast-card__temps {
+  color: #1a1a2e;
+}
+
+.weather-snowy .glass-card {
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 /* Accessibility helpers */
