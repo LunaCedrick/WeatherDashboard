@@ -34,6 +34,21 @@ const buildWeatherUrl = (endpoint, city) => {
 };
 
 /**
+ * Builds an OpenWeatherMap geocoding endpoint URL for city suggestions.
+ * @param {string} query - City search text to request
+ * @returns {string} Fully qualified geocoding API URL
+ */
+const buildGeocodingUrl = (query) => {
+  const url = new URL(DIRECT_GEOCODING_ENDPOINT, GEOCODING_BASE_URL);
+
+  url.searchParams.set("q", query);
+  url.searchParams.set("limit", SUGGESTION_LIMIT);
+  url.searchParams.set("appid", API_KEY);
+
+  return url.toString();
+};
+
+/**
  * Converts an HTTP response status into a typed API error.
  * @param {number} status - HTTP response status code
  * @returns {WeatherApiError} Typed error for the failed status
@@ -102,6 +117,28 @@ const parseWeatherResponse = async (response) => {
 const fetchWeatherEndpoint = async (endpoint, city) => {
   try {
     const response = await fetch(buildWeatherUrl(endpoint, city));
+
+    return await parseWeatherResponse(response);
+  } catch (error) {
+    if (error instanceof WeatherApiError) {
+      throw error;
+    }
+
+    throw new WeatherApiError(
+      API_ERROR_TYPES.CONNECTION_FAILED,
+      API_ERROR_MESSAGES.CONNECTION_FAILED
+    );
+  }
+};
+
+/**
+ * Fetches city suggestions from the OpenWeatherMap Geocoding API.
+ * @param {string} query - City search text to request
+ * @returns {Promise<object[]>} Geocoding API suggestion results
+ */
+const fetchCitySuggestions = async (query) => {
+  try {
+    const response = await fetch(buildGeocodingUrl(query));
 
     return await parseWeatherResponse(response);
   } catch (error) {

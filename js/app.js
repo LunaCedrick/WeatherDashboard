@@ -13,8 +13,11 @@ const state = {
 /* DOM references for application controls */
 const searchForm = document.querySelector("#search-form");
 const searchInput = document.querySelector("#search-input");
+const suggestionsList = document.querySelector("#city-suggestions");
 const unitCelsiusButton = document.querySelector("#unit-celsius");
 const unitFahrenheitButton = document.querySelector("#unit-fahrenheit");
+let suggestionsDebounceTimer = null;
+let latestSuggestionsRequest = 0;
 
 /**
  * Gets the trimmed city name from the search input.
@@ -22,6 +25,42 @@ const unitFahrenheitButton = document.querySelector("#unit-fahrenheit");
  */
 const getSearchCity = () => {
   return searchInput.value.trim();
+};
+
+/**
+ * Gets the nearest suggestion button from an event target.
+ * @param {EventTarget} target - Event target from a suggestion interaction
+ * @returns {HTMLButtonElement|null} Suggestion button or null
+ */
+const getSuggestionButton = (target) => {
+  if (!(target instanceof Element)) {
+    return null;
+  }
+
+  return target.closest(".suggestions__button");
+};
+
+/**
+ * Builds a search label from the selected suggestion text.
+ * @param {HTMLButtonElement} button - Selected suggestion button
+ * @returns {string} Search label for the selected city
+ */
+const getSuggestionSearchLabel = (button) => {
+  const city = button.querySelector(".suggestions__city")?.textContent.trim();
+  const meta = button.querySelector(".suggestions__meta")?.textContent.trim();
+
+  return [city, meta].filter(Boolean).join(", ");
+};
+
+/**
+ * Clears any pending city suggestions debounce timer.
+ * @returns {void} This function does not return a value
+ */
+const clearSuggestionsDebounce = () => {
+  if (suggestionsDebounceTimer) {
+    clearTimeout(suggestionsDebounceTimer);
+    suggestionsDebounceTimer = null;
+  }
 };
 
 /**
@@ -110,11 +149,74 @@ const handleSearch = async (city) => {
 
     localStorage.setItem(LAST_CITY_STORAGE_KEY, state.currentCity);
     renderStoredWeather();
+    clearSuggestions();
   } catch (error) {
     state.lastRawData.current = null;
     state.lastRawData.forecast = null;
     renderError(getErrorMessage(error));
   }
+};
+
+/**
+ * Fetches and renders suggestions for the current input value.
+ * @param {string} query - Trimmed city search query
+ * @returns {Promise<void>} Resolves when suggestions are handled
+ */
+const handleSuggestionsSearch = async (query) => {
+  const requestId = latestSuggestionsRequest + 1;
+  latestSuggestionsRequest = requestId;
+
+  try {
+    const suggestions = await fetchCitySuggestions(query);
+
+    if (requestId !== latestSuggestionsRequest) {
+      return;
+    }
+
+    renderSuggestions(suggestions);
+  } catch {
+    if (requestId === latestSuggestionsRequest) {
+      clearSuggestions();
+    }
+  }
+};
+
+/**
+ * Handles search input changes and debounces city suggestions.
+ * @returns {void} This function does not return a value
+ */
+const handleSearchInput = () => {
+  const query = getSearchCity();
+
+  clearSuggestionsDebounce();
+
+  if (query.length < MIN_SUGGESTION_QUERY_LENGTH) {
+    latestSuggestionsRequest += 1;
+    clearSuggestions();
+    return;
+  }
+
+  suggestionsDebounceTimer = setTimeout(() => {
+    handleSuggestionsSearch(query);
+  }, SUGGESTION_DEBOUNCE_DELAY);
+};
+
+/**
+ * Handles selection of a rendered city suggestion.
+ * @param {HTMLButtonElement} button - Selected suggestion button
+ * @returns {void} This function does not return a value
+ */
+const handleSuggestionSelection = (button) => {
+  const cityLabel = getSuggestionSearchLabel(button);
+
+  if (!cityLabel) {
+    return;
+  }
+
+  searchInput.value = cityLabel;
+  clearSuggestionsDebounce();
+  clearSuggestions();
+  handleSearch(cityLabel);
 };
 
 /**
@@ -135,7 +237,31 @@ const initializeStoredCity = () => {
 /* Search form submit listener */
 searchForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  clearSuggestionsDebounce();
+  clearSuggestions();
   handleSearch(getSearchCity());
+});
+
+/* Search input suggestions listener */
+searchInput.addEventListener("input", () => {
+  handleSearchInput();
+});
+
+/* Search input escape listener */
+searchInput.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    clearSuggestionsDebounce();
+    clearSuggestions();
+  }
+});
+
+/* Suggestions selection listener */
+suggestionsList.addEventListener("click", (event) => {
+  const button = getSuggestionButton(event.target);
+
+  if (button) {
+    handleSuggestionSelection(button);
+  }
 });
 
 /* Celsius toggle listener */

@@ -101,6 +101,8 @@ const setBackground = (conditionCode, currentTime, sunrise, sunset) => {
 /* DOM references */
 const weatherCard = document.querySelector("#weather-card");
 const forecastContainer = document.querySelector("#forecast-container");
+const citySuggestions = document.querySelector("#city-suggestions");
+const suggestionSearchInput = document.querySelector("#search-input");
 
 /**
  * Creates an HTML element with an optional class name.
@@ -116,6 +118,84 @@ const createElement = (tagName, className = "") => {
   }
 
   return element;
+};
+
+/**
+ * Formats a city suggestion name from geocoding data.
+ * @param {object} suggestion - Geocoding API suggestion item
+ * @returns {string} City name label
+ */
+const formatSuggestionCity = (suggestion) => {
+  return suggestion?.name || "Unknown city";
+};
+
+/**
+ * Formats a city suggestion metadata label from geocoding data.
+ * @param {object} suggestion - Geocoding API suggestion item
+ * @returns {string} State and country metadata label
+ */
+const formatSuggestionMeta = (suggestion) => {
+  return [suggestion?.state, suggestion?.country].filter(Boolean).join(", ");
+};
+
+/**
+ * Sets the search input expanded state for the suggestions list.
+ * @param {boolean} isExpanded - Whether suggestions are currently visible
+ * @returns {void} This function does not return a value
+ */
+const setSuggestionsExpanded = (isExpanded) => {
+  suggestionSearchInput.setAttribute("aria-expanded", String(isExpanded));
+};
+
+/**
+ * Creates a keyboard-focusable city suggestion button.
+ * @param {object} suggestion - Geocoding API suggestion item
+ * @returns {HTMLButtonElement} Suggestion button element
+ */
+const createSuggestionButton = (suggestion) => {
+  const button = createElement("button", "suggestions__button");
+  const city = createElement("span", "suggestions__city");
+  const meta = createElement("span", "suggestions__meta");
+
+  button.type = "button";
+  button.setAttribute("role", "option");
+  city.textContent = formatSuggestionCity(suggestion);
+  meta.textContent = formatSuggestionMeta(suggestion);
+
+  button.append(city, meta);
+
+  return button;
+};
+
+/**
+ * Clears all rendered city suggestions.
+ * @returns {void} This function does not return a value
+ */
+const clearSuggestions = () => {
+  citySuggestions.replaceChildren();
+  citySuggestions.hidden = true;
+  setSuggestionsExpanded(false);
+};
+
+/**
+ * Renders city suggestions in the search dropdown.
+ * @param {object[]} suggestions - Geocoding API suggestion results
+ * @returns {void} This function does not return a value
+ */
+const renderSuggestions = (suggestions) => {
+  citySuggestions.replaceChildren();
+
+  if (!Array.isArray(suggestions) || suggestions.length === 0) {
+    clearSuggestions();
+    return;
+  }
+
+  suggestions.forEach((suggestion) => {
+    citySuggestions.append(createSuggestionButton(suggestion));
+  });
+
+  citySuggestions.hidden = false;
+  setSuggestionsExpanded(true);
 };
 
 /**

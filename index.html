@@ -31,15 +31,27 @@
 
       <form class="search" id="search-form">
         <label class="visually-hidden" for="search-input">Search for a city</label>
-        <input
-          class="search__input"
-          id="search-input"
-          name="city"
-          type="search"
-          placeholder="Search city"
-          aria-label="Search for a city"
-          autocomplete="off"
-        >
+        <div class="search__field">
+          <input
+            class="search__input"
+            id="search-input"
+            name="city"
+            type="search"
+            placeholder="Search city"
+            aria-label="Search for a city"
+            aria-autocomplete="list"
+            aria-controls="city-suggestions"
+            aria-expanded="false"
+            autocomplete="off"
+          >
+          <div
+            class="suggestions"
+            id="city-suggestions"
+            role="listbox"
+            aria-label="City suggestions"
+            hidden
+          ></div>
+        </div>
         <button class="search__button" id="search-button" type="submit" aria-label="Get weather">
           Search
         </button>

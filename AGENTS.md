@@ -31,6 +31,8 @@ Do not apply portfolio styles here. Start from zero.
 
 Core behavior:
 - User types a city name → app fetches real weather data
+- User types at least 2 characters → app shows city suggestions
+- User selects a suggestion → app searches that selected location
 - Background transitions to match the weather condition
 - Frosted glass cards display current weather + 5-day forecast
 - Temperature toggles between Celsius and Fahrenheit instantly
@@ -160,6 +162,21 @@ Google Fonts import — both fonts, correct weights:
 }
 ```
 
+### City Suggestions Dropdown
+Suggestions are part of the search layout, not a floating overlay.
+The suggestions container must sit directly below the search input
+inside the search field group and participate in normal document flow.
+
+Rules:
+- Suggestions push the search button, unit toggle, and weather card down
+- Suggestions must not overlap or be covered by frosted glass cards
+- Do not use absolute positioning unless explicitly building an overlay
+- If an overlay is explicitly requested, define parent/sibling stacking contexts
+  so backdrop-filter cards cannot cover the dropdown
+- Suggestion rows are keyboard-focusable buttons/items
+- Suggestion text wraps safely and never causes horizontal scrolling
+- Dropdown remains readable on all weather backgrounds
+
 ### Buttons
 ```css
 /* Search button */
@@ -234,12 +251,14 @@ weather-dashboard/
 ├── skills/
 │   ├── setup/SKILL.md
 │   ├── api/SKILL.md
+│   ├── autocomplete/SKILL.md
 │   ├── background/SKILL.md
 │   ├── ui/SKILL.md
 │   ├── app/SKILL.md
 │   ├── review/SKILL.md
 │   ├── responsive/SKILL.md
-│   └── performance/SKILL.md
+│   ├── performance/SKILL.md
+│   └── vercel-deploy/SKILL.md
 ├── AGENTS.md           ← This file
 ├── PLAN.md             ← Full project plan
 └── README.md           ← Project documentation
@@ -274,6 +293,7 @@ config.js
 api.js
   ✅ fetchCurrentWeather(city) — returns data or throws error
   ✅ fetchForecast(city) — returns data or throws error
+  ✅ fetchCitySuggestions(query) — returns geocoding suggestions or throws error
   ✅ HTTP error handling (401, 404, 429, 500)
   ✅ Throws typed, descriptive errors
   ❌ No DOM access — never touches the HTML
@@ -283,6 +303,8 @@ api.js
 ui.js
   ✅ renderWeather(data, unit) — populates weather card
   ✅ renderForecast(data, unit) — populates forecast cards
+  ✅ renderSuggestions(suggestions) — populates city suggestion list
+  ✅ clearSuggestions() — hides and empties city suggestion list
   ✅ renderLoading() — shows loading state
   ✅ renderError(message) — shows error in card area
   ✅ clearUI() — resets display to empty state
@@ -295,6 +317,8 @@ ui.js
 app.js
   ✅ Application state object
   ✅ handleSearch(city) — full search flow orchestrator
+  ✅ Debounced suggestion input handling
+  ✅ Suggestion selection event handling
   ✅ Event listeners (search, Enter key, unit toggle)
   ✅ Promise.all for parallel API calls
   ✅ localStorage read on page load
@@ -416,6 +440,15 @@ const dailyForecasts = data.list.filter(item =>
 https://openweathermap.org/img/wn/{iconCode}@2x.png
 ```
 
+### Direct Geocoding Endpoint
+```
+GET /geo/1.0/direct?q={query}&limit={limit}&appid={API_KEY}
+```
+
+Used only for search suggestions.
+Suggestion failures should fail quietly or clear suggestions.
+Do not show suggestion API errors in the dropdown.
+
 ### HTTP Error Codes
 ```
 401 → Invalid API key
@@ -476,6 +509,7 @@ index.html, style.css, config.js, api.js, ui.js, app.js
 ### IDs — kebab-case, unique per page
 ```
 id="search-input", id="search-button"
+id="city-suggestions"
 id="weather-card", id="forecast-container"
 id="error-message", id="loading-state"
 id="unit-celsius", id="unit-fahrenheit"
@@ -534,6 +568,8 @@ No magic numbers — use named constants from config.js.
   - 768px  → tablet
   - 1024px → desktop
 - Never allow horizontal scrolling
+- City suggestions open in-flow below the input and push content down
+- City suggestions never overlap the search button, unit toggle, or weather card
 - Forecast cards scroll horizontally on mobile (touch swipe)
 - Forecast cards display in a row on desktop
 - Main weather card is full width on mobile
@@ -551,6 +587,10 @@ No magic numbers — use named constants from config.js.
 - All images have descriptive alt text
 - Error messages use role="alert"
 - Search input has aria-label="Search for a city"
+- Search input uses aria-autocomplete, aria-controls, and aria-expanded when suggestions exist
+- Suggestions container is associated with the search input
+- Suggestion items are keyboard-focusable
+- Escape closes suggestions when implemented
 - Unit toggle buttons have aria-pressed="true/false"
 - Full keyboard navigation — Enter fires search from input
 - Focus states visible — never outline: none without replacement
@@ -601,12 +641,14 @@ docs: short description     ← README or comments updated
 ```
 skills/setup/SKILL.md       → Day 1: folder, HTML, CSS reset, fonts
 skills/api/SKILL.md         → API layer: config.js + api.js
+skills/autocomplete/SKILL.md → City search suggestions via Geocoding API
 skills/background/SKILL.md  → Sky gradient system + condition mapping
 skills/ui/SKILL.md          → Render functions in ui.js
 skills/app/SKILL.md         → Orchestrator: app.js, state, events
 skills/review/SKILL.md      → QA gate — run after every session
 skills/responsive/SKILL.md  → Full mobile pass after all features done
 skills/performance/SKILL.md → Pre-deployment cleanup
+skills/vercel-deploy/SKILL.md → Vercel build-time config generation
 ```
 
 ### Skill Usage Rule
@@ -689,6 +731,19 @@ After building, perform a self-review using skills/review/SKILL.md.
 Report what was built and flag any issues.
 ```
 
+### PROMPT: build-autocomplete
+```
+Read AGENTS.md and skills/autocomplete/SKILL.md completely.
+The core app already exists — preserve existing search behavior.
+Add city suggestions using the OpenWeatherMap Geocoding API.
+Suggestions must open in-flow below the input and push content down.
+Do not allow suggestions to overlap the search button, unit toggle, or weather card.
+Use textContent — never innerHTML for external data.
+Preserve Promise.all for weather + forecast calls.
+After building, perform a self-review using skills/review/SKILL.md.
+Report what was built and flag any issues.
+```
+
 ### PROMPT: run-responsive
 ```
 Read AGENTS.md and skills/responsive/SKILL.md completely.
@@ -710,6 +765,18 @@ Do not change any functionality — cleanup only.
 Report every change made.
 ```
 
+### PROMPT: deploy-vercel
+```
+Read AGENTS.md and skills/vercel-deploy/SKILL.md completely.
+Configure Vercel deployment using build-time generation of js/config.js.
+Do not commit js/config.js or any real API key.
+Use OPENWEATHER_API_KEY as the Vercel environment variable name.
+Create the minimal package.json, vercel.json, and generation script needed.
+Verify the build script with a dummy key.
+After setup, perform a self-review using skills/review/SKILL.md.
+Report what was built and the exact Vercel environment variable to set.
+```
+
 ---
 
 ## 16. RULES OF THE ROAD
@@ -720,6 +787,9 @@ Report every change made.
 - Never use innerHTML for user-supplied or API-sourced data
 - Never store converted temperatures — Kelvin is the source of truth
 - Never make sequential API calls — always Promise.all
+- Never make autocomplete suggestions an absolute overlay unless explicitly requested
+- Never allow suggestions to overlap or be covered by weather cards or controls
+- Never commit js/config.js or a real OpenWeatherMap API key
 - Never commit with console.log statements
 - Never skip the review skill before committing
 - Never work on two modules in the same session
