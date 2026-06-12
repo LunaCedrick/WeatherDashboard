@@ -600,7 +600,8 @@ img {
   width: 100%;
   gap: var(--spacing-gap);
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding: 25px 30px 30px;
+  margin: -25px -30px -30px;
   scrollbar-width: thin;
 }
 
