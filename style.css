@@ -600,8 +600,7 @@ img {
   width: 100%;
   gap: var(--spacing-gap);
   overflow-x: auto;
-  padding: 25px 30px 30px;
-  margin: -25px -30px -30px;
+  padding: 12px 12px 14px;
   scrollbar-width: thin;
 }
 
@@ -612,6 +611,7 @@ img {
   gap: 8px;
   padding: var(--spacing-card-mobile);
   text-align: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 }
 
 .forecast-card__day {
